@@ -4,16 +4,14 @@
 TinyGPS tiny_gps;
 SoftwareSerial gps = SoftwareSerial(3,4);
 
-static void gps_smartdelay();
+static void gps_smartdelay(unsigned long ms);
 static void print_float(float val, float invalid, int len, int prec);
 static void print_int(unsigned long val, unsigned long invalid, int len);
 static void print_date(TinyGPS &tiny_gps);
 static void print_str(const char *str, int len);
 
-
 #define CMPS_GET_ANGLE8 0x12
 #define CMPS_GET_ANGLE16 0x13
-
 
 enum GPS_STATE {
   NONE,
@@ -22,6 +20,8 @@ enum GPS_STATE {
 };
 
 static GPS_STATE gps_state = NONE;
+static unsigned long gps_start;
+static const unsigned long gps_delay = 1000;
 
 SoftwareSerial cmps11 = SoftwareSerial(6,5);
 unsigned char high_byte, low_byte, angle8;
@@ -45,24 +45,23 @@ void loop()
 
 void doGPS()
 {
- 
-
   gps.listen();
 
   if( gps_state == NONE)
   {
-      gps_state = READING;
+    gps_start = millis();
+    gps_state = READING;
   }
 
   if( gps_state == READING)
   {
-      gps_smartdelay(); 
+    gps_smartdelay(gps_delay); 
   }
 
   else if (gps_state == WRITING)
   {     
     getGPSData();
-    gps_smartdelay(); 
+   // gps_smartdelay(); 
     gps_state = NONE;
   }
   
@@ -127,17 +126,28 @@ void doBeat()
   
 }
 
-static void gps_smartdelay()
+/*static void gps_smartdelay(unsigned long ms)
+{
+  unsigned long start = millis();
+  do 
+  {
+    while (gps.available())
+      tiny_gps.encode(gps.read());
+  } while (millis() - start < ms);
+   gps_state = WRITING;
+}*/
+
+static void gps_smartdelay(unsigned long ms)
 { 
-  bool finished = false;
+
  
   while (gps.available())
   {
      tiny_gps.encode(gps.read());
-     finished = true;
+
   }
 
-  if (finished)
+  if ( (millis() - gps_start) > gps_delay)
   {
     gps_state = WRITING;
   }     
@@ -162,7 +172,7 @@ static void print_float(float val, float invalid, int len, int prec)
     for (int i=flen; i<len; ++i)
       Serial.print(' ');
   }
-  //gps_smartdelay();
+  gps_smartdelay(0);
 }
 
 static void print_int(unsigned long val, unsigned long invalid, int len)
@@ -178,7 +188,7 @@ static void print_int(unsigned long val, unsigned long invalid, int len)
   if (len > 0) 
     sz[len-1] = ' ';
   Serial.print(sz);
- // gps_smartdelay();
+  gps_smartdelay(0);
 }
 
 static void print_date(TinyGPS &tiny_gps)
@@ -197,7 +207,7 @@ static void print_date(TinyGPS &tiny_gps)
     Serial.print(sz);
   }
   print_int(age, TinyGPS::GPS_INVALID_AGE, 5);
-  //gps_smartdelay();
+  gps_smartdelay(0);
 }
 
 static void print_str(const char *str, int len)
@@ -205,5 +215,5 @@ static void print_str(const char *str, int len)
   int slen = strlen(str);
   for (int i=0; i<len; ++i)
     Serial.print(i<slen ? str[i] : ' ');
-  //gps_smartdelay();
+  gps_smartdelay(0);
 }
