@@ -1,16 +1,10 @@
 #include <HeadingCMPS11.h>
 #include <TidyGPS.h>
+#include <Beat.h>
 
 #include <SoftwareSerial.h>
 
-
-//SoftwareSerial gps = SoftwareSerial(3, 4);
-
-
-static const int BEATING_DELAYS[] = {10, 150, 10, 1500};
-static const int PANIC_DELAYS[] = {10, 10, 10, 10};
-
-static int solenoidPin = 9;
+static const int BEAT_PIN = 9;
 
 static const double TARGET_LAT = 50.853683 , TARGET_LON = -0.117813;
 static const int TARGET_RANGE_TIGHT = 5; // margin of error for within tight range of target
@@ -23,58 +17,65 @@ SoftwareSerial ss_cmps11 = SoftwareSerial(6, 5);
 HeadingCMPS11 cmps11(&ss_cmps11);
 unsigned int current_angle;
 
+enum beatType {
+  NONE,
+  STEADY,
+  RAPID
+};
+
+beatType currentBeat = NONE;
+Beat beat(BEAT_PIN);
+
 void setup()
 {
   Serial.begin(115200);
   gps.begin(9600);
-  gps.setTargetCoords(TARGET_LAT,TARGET_LON );
+  gps.setTargetCoords(TARGET_LAT, TARGET_LON );
   cmps11.begin(9600);
-  pinMode(solenoidPin, OUTPUT);
+
 }
 
 void loop()
 {
   gps.advance();
-  doCompass();
-
-  
+  beat.advance();
+  current_angle = cmps11.getHeading();
 
   calculateAngle();
   //doBeat();
 }
 
 
-void doCompass()
-{
-  unsigned int new_angle;
-
-  new_angle = cmps11.getHeading();
-
-  if ( new_angle != current_angle)
-  {
-    current_angle = new_angle;
-    Serial.print(current_angle, DEC);
-    Serial.println();
-  }
-
-}
-
 void calculateAngle()
 {
- if ( gps.isBearingWithinTolerance( current_angle, 5 ))
+  if ( gps.isBearingWithinTolerance( current_angle, 5 ))
   {
-    digitalWrite(solenoidPin, HIGH);
-    Serial.println("HIT");
+ 
+    if ( currentBeat != RAPID )
+    {
+      currentBeat = RAPID;
+      beat.stop();
+      beat.start(10, 100, 10, 200);
+    }
+
   }
 
-  else if ( gps.isBearingWithinTolerance( current_angle, 45 ))
+ else if ( gps.isBearingWithinTolerance( current_angle, 45 ))
   {
-    Serial.println("WARM");
+    if ( currentBeat != STEADY)
+    {
+      currentBeat = STEADY;
+      beat.stop();
+      beat.start(20, 200, 20, 2000);
+    }
+
   }
-  else
+
+  else if (  currentBeat != NONE )
   {
-    digitalWrite(solenoidPin, LOW);
-    Serial.println("MISS");
+    Serial.println("NONE");
+    currentBeat = NONE;
+    beat.stop();
   }
 }
 
