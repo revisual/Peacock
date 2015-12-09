@@ -165,7 +165,6 @@ void TidyGPS::gpsWrite()
 {
   _currentBearing = (int)_tinyGPS.course_to(_currentLat, _currentLon, _targetLat, _targetLon);
   _currentDistance = (unsigned int )_tinyGPS.distance_between(_currentLat, _currentLon, _targetLat, _targetLon);
-  Serial.println("distance = " + (String)_currentDistance);
 }
 
 bool TidyGPS::testHeading( unsigned int gpsBearing, unsigned int bearing, unsigned int tolerance )
