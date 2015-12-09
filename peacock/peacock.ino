@@ -30,7 +30,7 @@ enum BeatType {
 BeatType currentBeat = NONE;
 
 enum FreshnessType {
-  
+
   INVALID,
   FRESH,
   STALE
@@ -59,12 +59,12 @@ void trackFreshness()
 {
   bool isFresh =  gps.isFresherThan(FRESHNESS_TARGET);
 
-  Serial.println("fresh = " + (String)isFresh);
-
-  if ( !gps.isValid() && currentFreshness != INVALID)
+  if ( !gps.isValid() )
   {
-   // beat.start(100, 100, 100, 100);
-    currentFreshness = INVALID;
+    if( currentFreshness != INVALID)
+    {
+       currentFreshness = INVALID;
+    }   
     return;
   }
 
@@ -72,31 +72,24 @@ void trackFreshness()
   {
     currentFreshness = FRESH;
     gps.setReadingCycle(100, 1000);
-    Serial.println("adjusting for freshness (100)");
-    //Serial.println("hdop = "+(String)gps.getHDOP());
   }
 
   else if (!isFresh && currentFreshness != STALE)
   {
     currentFreshness = STALE;
     gps.setReadingCycle(333, 1000);
-    Serial.println("adjusting for staleness (333)");
-    //Serial.println("fresh = "+(String)gps.isFresherThan(10000));
-    //Serial.println("hdop = "+(String)gps.getHDOP());
   }
 }
 
 void setBearing(unsigned int current_angle)
 {
-  if( !gps.isValid()) return;
-  
+  if ( !gps.isValid()) return;
+
   if ( gps.isDistanceWithinTolerance( TARGET_DISTANCE ))
   {
     if ( currentBeat != CONSTANT )
     {
       currentBeat = CONSTANT;
-      //beat.stop();
-      //beat.on();
     }
   }
 
