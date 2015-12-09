@@ -1,5 +1,5 @@
 /*
- 
+
 */
 #ifndef TidyGPS_h
 #define TidyGPS_h
@@ -21,6 +21,9 @@ class TidyGPS
     unsigned long  getAgeOfFix();
     bool isDistanceWithinTolerance( unsigned int tolerance );
     bool isBearingWithinTolerance( unsigned int heading, unsigned int tolerance );
+    bool isValid();
+    bool isFresherThan( unsigned long ms);
+    unsigned long getHDOP();
 
   private:
     SoftwareSerial * _gps;
@@ -41,12 +44,20 @@ class TidyGPS
     double _targetLon = 0;
     float _currentLat = 0;
     float _currentLon = 0;
+    
     unsigned long _ageOfFix = 10000;
+    unsigned long _chars = 0;
+    unsigned short _sentences = 0;
+    unsigned short _failed = 0;
+
     void applyPosition();
+    void applyStats();
     void gpsRead(unsigned long ms);
     void gpsWrite();
     bool testHeading( unsigned int gpsheading, unsigned int heading, unsigned int tolerance );
-  
+    bool isMoreValidThan(unsigned short value);
+   
+
 };
 
 #endif
