@@ -1,5 +1,5 @@
-#include <HeadingCMPS11.h>
-#include <TidyGPS.h>
+#include <CMPS11Service.h>
+#include <GPSService.h>
 #include <Beat.h>
 
 #include <SoftwareSerial.h>
@@ -14,10 +14,10 @@ static const int TARGET_DISTANCE = 5; // margin of error for within loose range 
 static const unsigned long FRESHNESS_TARGET = 10000; // data considered stale if _ageOfFix exceeds this
 
 SoftwareSerial ss_gps1 = SoftwareSerial(3, 4);
-TidyGPS gps(&ss_gps1);
+GPSService gps(&ss_gps1);
 
 SoftwareSerial ss_cmps11 = SoftwareSerial(6, 5);
-HeadingCMPS11 cmps11(&ss_cmps11);
+CMPS11Service cmps11(&ss_cmps11);
 
 Beat beat(BEAT_PIN);
 enum BeatType {
