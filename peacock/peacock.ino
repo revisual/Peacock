@@ -30,7 +30,6 @@ enum BeatType {
 BeatType currentBeat = NONE;
 
 enum FreshnessType {
-
   INVALID,
   FRESH,
   STALE
@@ -71,7 +70,7 @@ void trackFreshness()
   else if (isFresh && currentFreshness != FRESH)
   {
     currentFreshness = FRESH;
-    gps.setReadingCycle(100, 1000);
+    gps.setReadingCycle(111, 1000);
   }
 
   else if (!isFresh && currentFreshness != STALE)
