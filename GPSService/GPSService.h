@@ -47,10 +47,10 @@ class GPSService
     FreshnessType currentFreshness = INVALID;
 
     unsigned long _timerStart = 0;
-    unsigned long _readCycleFresh = 500;
-    unsigned long _restCycleFresh = 5000;
-    unsigned long _readCycleStale = 500;
-    unsigned long _restCycleStale = 5000;
+    unsigned long _readCycleFresh = 111;
+    unsigned long _restCycleFresh = 1000;
+    unsigned long _readCycleStale = 333;
+    unsigned long _restCycleStale = 1000;
     unsigned long _readCycle = 500;
     unsigned long _restCycle = 5000;
     unsigned long _freshnessTolerance = 10000;
