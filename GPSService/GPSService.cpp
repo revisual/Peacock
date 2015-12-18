@@ -50,14 +50,26 @@ void GPSService::advance()
     {
       _gpsState = RESET;
     }
-
   }
+
+  trackFreshness();
 }
 
-void GPSService::setReadingCycle(unsigned long reading, unsigned long resting )
+void GPSService::setFreshnessTolerance(unsigned long ms)
 {
-  _readCycle = reading;
-  _restCycle = resting;
+  _freshnessTolerance = ms;
+}
+
+void GPSService::setFreshReadingCycle(unsigned long reading, unsigned long resting )
+{
+  _readCycleFresh = reading;
+  _restCycleFresh = resting;
+}
+
+void GPSService::setStaleReadingCycle(unsigned long reading, unsigned long resting )
+{
+  _readCycleStale = reading;
+  _restCycleStale = resting;
 }
 
 void GPSService::setTargetCoords(double lat, double lon)
@@ -171,6 +183,34 @@ bool GPSService::testHeading( unsigned int gpsBearing, unsigned int bearing, uns
 {
   int diff = abs(gpsBearing - bearing);
   return (diff <= tolerance) ;
+}
+
+void GPSService::trackFreshness()
+{
+  bool isFresh =  isFresherThan(_freshnessTolerance);
+
+  if ( !isValid() )
+  {
+    if ( currentFreshness != INVALID)
+    {
+      currentFreshness = INVALID;
+    }
+    return;
+  }
+
+  else if (isFresh && currentFreshness != FRESH)
+  {
+    currentFreshness = FRESH;
+    _readCycle = _readCycleFresh;
+    _restCycle = _restCycleFresh;
+  }
+
+  else if (!isFresh && currentFreshness != STALE)
+  {
+    currentFreshness = STALE;
+    _readCycle = _readCycleStale;
+    _restCycle = _restCycleStale;
+  }
 }
 
 
