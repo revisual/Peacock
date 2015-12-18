@@ -1,17 +1,17 @@
 /*
 
 */
-#ifndef TidyGPS_h
-#define TidyGPS_h
+#ifndef GPSService_h
+#define GPSService_h
 
 #include "Arduino.h"
 #include "SoftwareSerial.h"
 #include "TinyGPS.h"
 
-class TidyGPS
+class GPSService
 {
   public:
-    TidyGPS(SoftwareSerial *ss);
+    GPSService(SoftwareSerial *ss);
     void begin(long speed);
     void advance();
     void setReadingCycle(unsigned long reading, unsigned long resting );

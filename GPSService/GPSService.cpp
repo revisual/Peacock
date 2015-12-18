@@ -3,22 +3,22 @@
 */
 
 #include "Arduino.h"
-#include "TidyGPS.h"
+#include "GPSService.h"
 #include "TinyGPS.h"
 #include "SoftwareSerial.h"
 
 
-TidyGPS::TidyGPS(SoftwareSerial *ss)
+GPSService::GPSService(SoftwareSerial *ss)
 {
   _gps = ss;
 }
 
-void TidyGPS::begin(long speed)
+void GPSService::begin(long speed)
 {
   _gps->begin(speed);
 }
 
-void TidyGPS::advance()
+void GPSService::advance()
 {
   _gps->listen();
 
@@ -54,54 +54,54 @@ void TidyGPS::advance()
   }
 }
 
-void TidyGPS::setReadingCycle(unsigned long reading, unsigned long resting )
+void GPSService::setReadingCycle(unsigned long reading, unsigned long resting )
 {
   _readCycle = reading;
   _restCycle = resting;
 }
 
-void TidyGPS::setTargetCoords(double lat, double lon)
+void GPSService::setTargetCoords(double lat, double lon)
 {
   _targetLat = lat;
   _targetLon = lon;
 }
 
-int TidyGPS::getCurrentBearing()
+int GPSService::getCurrentBearing()
 {
   return _currentBearing;
 }
 
-unsigned int  TidyGPS::getCurrentDistance()
+unsigned int  GPSService::getCurrentDistance()
 {
   return _currentDistance;
 }
 
-unsigned long  TidyGPS::getAgeOfFix()
+unsigned long  GPSService::getAgeOfFix()
 {
   return _ageOfFix;
 }
 
-unsigned long TidyGPS::getHDOP()
+unsigned long GPSService::getHDOP()
 {
   return _tinyGPS.hdop();
 }
 
-bool TidyGPS::isValid()
+bool GPSService::isValid()
 {
   return (_ageOfFix != TinyGPS::GPS_INVALID_AGE);
 }
 
-bool TidyGPS::isFresherThan( unsigned long ms)
+bool GPSService::isFresherThan( unsigned long ms)
 {
   return (_ageOfFix < ms);
 }
 
-bool TidyGPS::isDistanceWithinTolerance( unsigned int tolerance )
+bool GPSService::isDistanceWithinTolerance( unsigned int tolerance )
 {
   return ( _currentDistance < tolerance );
 }
 
-bool TidyGPS::isBearingWithinTolerance( unsigned int heading, unsigned int tolerance )
+bool GPSService::isBearingWithinTolerance( unsigned int heading, unsigned int tolerance )
 {
   if ( tolerance > 45 )
   {
@@ -123,17 +123,17 @@ bool TidyGPS::isBearingWithinTolerance( unsigned int heading, unsigned int toler
   }
 }
 
-void TidyGPS::applyPosition()
+void GPSService::applyPosition()
 {
   _tinyGPS.f_get_position(&_currentLat, &_currentLon, &_ageOfFix);
 }
 
-void TidyGPS::applyStats()
+void GPSService::applyStats()
 {
   _tinyGPS.stats(&_chars, &_sentences, &_failed);
 }
 
-void TidyGPS::gpsRead(unsigned long ms)
+void GPSService::gpsRead(unsigned long ms)
 {
   unsigned long start = millis();
   bool hasRead;
@@ -155,20 +155,19 @@ void TidyGPS::gpsRead(unsigned long ms)
   } while (millis() - start < ms);
 }
 
-bool TidyGPS::isMoreValidThan(unsigned short value)
+bool GPSService::isMoreValidThan(unsigned short value)
 {
   applyStats();
   return ( _sentences > value );
 }
 
-void TidyGPS::gpsWrite()
+void GPSService::gpsWrite()
 {
   _currentBearing = (int)_tinyGPS.course_to(_currentLat, _currentLon, _targetLat, _targetLon);
   _currentDistance = (unsigned int )_tinyGPS.distance_between(_currentLat, _currentLon, _targetLat, _targetLon);
-  Serial.println("distance = " + (String)_currentDistance);
 }
 
-bool TidyGPS::testHeading( unsigned int gpsBearing, unsigned int bearing, unsigned int tolerance )
+bool GPSService::testHeading( unsigned int gpsBearing, unsigned int bearing, unsigned int tolerance )
 {
   int diff = abs(gpsBearing - bearing);
   return (diff <= tolerance) ;

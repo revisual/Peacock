@@ -1,16 +1,16 @@
 /*
  
 */
-#ifndef HeadingCMPS11_h
-#define HeadingCMPS11_h
+#ifndef CMPS11Service_h
+#define CMPS11Service_h
 
 #include "Arduino.h"
 #include "SoftwareSerial.h"
 
-class HeadingCMPS11
+class CMPS11Service
 {
   public:
-    HeadingCMPS11(SoftwareSerial *ss);
+    CMPS11Service(SoftwareSerial *ss);
     unsigned int getHeading();
     void begin(long speed);
   private:

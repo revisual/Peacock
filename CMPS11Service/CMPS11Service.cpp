@@ -3,22 +3,22 @@
 */
 
 #include "Arduino.h"
-#include "HeadingCMPS11.h"
+#include "CMPS11Service.h"
 #include "SoftwareSerial.h"
 
-const int HeadingCMPS11::CMPS_GET_ANGLE16 = 0x13;
+const int CMPS11Service::CMPS_GET_ANGLE16 = 0x13;
 
-HeadingCMPS11::HeadingCMPS11(SoftwareSerial *ss)
+CMPS11Service::CMPS11Service(SoftwareSerial *ss)
 {
   _cmps11 = ss;  
 }
 
-void HeadingCMPS11::begin(long speed)
+void CMPS11Service::begin(long speed)
 {
   _cmps11->begin(9600); 
 }
 
-unsigned int HeadingCMPS11::getHeading()
+unsigned int CMPS11Service::getHeading()
 {
   unsigned char high_byte;
   unsigned char low_byte;
