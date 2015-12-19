@@ -18,24 +18,31 @@ SoftwareSerial ss_cmps11 = SoftwareSerial(6, 5);
 CMPS11Service cmps11(&ss_cmps11);
 
 Beat beat(BEAT_PIN);
-enum BeatType {
-  NONE,
-  STEADY,
-  RAPID,
-  CONSTANT
+
+enum State {
+  STARTINGUP, //on start up
+  READING,    //immediatly reads and deserialises data
+  NAVIGATING, //walking towards next waypoint
+  RESTING,    //waypoint attained next waypoint retreieved, music plays etc
+  COMPLETE    //reached final destination
 };
 
-BeatType currentBeat = NONE;
+State currentState = STARTINGUP;
 
 void setup()
 {
   Serial.begin(115200);
+
   gps.begin(9600);
   gps.setFreshnessTolerance(10000);
   gps.setFreshReadingCycle(111, 1000);
   gps.setStaleReadingCycle(333, 1000);
   gps.setTargetCoords(TARGET_LAT, TARGET_LON );
+
   cmps11.begin(9600);
+
+  beat.configureState(beat.STEADY_HEART, 20, 200, 20, 1500);
+  beat.configureState(beat.RAPID_HEART, 15, 150, 15, 500);
 }
 
 void loop()
@@ -51,35 +58,21 @@ void setBearing(unsigned int current_angle)
 
   if ( gps.isDistanceWithinTolerance( TARGET_DISTANCE ))
   {
-    if ( currentBeat != CONSTANT )
-    {
-      currentBeat = CONSTANT;
-    }
+
   }
 
   else if ( gps.isBearingWithinTolerance( current_angle, TARGET_RANGE_TIGHT ))
   {
-    if ( currentBeat != RAPID )
-    {
-      currentBeat = RAPID;
-      beat.stop();
-      beat.start(15, 150, 15, 500);
-    }
-
+    beat.setState(beat.RAPID_HEART);
   }
 
   else if ( gps.isBearingWithinTolerance( current_angle, TARGET_RANGE_LOOSE ))
   {
-    if ( currentBeat != STEADY)    {
-      currentBeat = STEADY;
-      beat.stop();
-      beat.start(20, 200, 20, 1500);
-    }
+    beat.setState(beat.STEADY_HEART);
   }
 
-  else if (  currentBeat != NONE )
+  else
   {
-    currentBeat = NONE;
-    beat.stop();
+    beat.setState(beat.NONE);
   }
 }
