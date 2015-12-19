@@ -11,10 +11,10 @@ static const int TARGET_RANGE_TIGHT = 5; // margin of error for within tight ran
 static const int TARGET_RANGE_LOOSE = 45; // margin of error for within loose range of target
 static const int TARGET_DISTANCE = 5; // margin of error for within loose range of target
 
-SoftwareSerial ss_gps1 = SoftwareSerial(3, 4);
+SoftwareSerial ss_gps1 = SoftwareSerial(6, 7);
 GPSService gps(&ss_gps1);
 
-SoftwareSerial ss_cmps11 = SoftwareSerial(6, 5);
+SoftwareSerial ss_cmps11 = SoftwareSerial(8, 9);
 CMPS11Service cmps11(&ss_cmps11);
 
 Beat beat(BEAT_PIN);
@@ -22,8 +22,9 @@ Beat beat(BEAT_PIN);
 enum State {
   STARTINGUP, //on start up
   READING,    //immediatly reads and deserialises data
-  NAVIGATING, //walking towards next waypoint
-  RESTING,    //waypoint attained next waypoint retreieved, music plays etc
+  CHECKING_SYSTEM, // test solonid, comms out / in, music
+  NAVIGATING_TO_WAYPOINT, //walking towards next waypoint
+  RESTING_AT_WAYPOINT,    //waypoint attained next waypoint retreieved, music plays etc
   COMPLETE    //reached final destination
 };
 
@@ -49,7 +50,9 @@ void loop()
 {
   gps.advance();
   beat.advance();
-  setBearing(cmps11.getHeading());
+  //setBearing(cmps11.getHeading());
+  Serial.println("age of fix = " + (String)gps.getAgeOfFix());
+  Serial.println("heading = " + (String)cmps11.getHeading());
 }
 
 void setBearing(unsigned int current_angle)
