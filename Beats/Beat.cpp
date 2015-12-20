@@ -36,10 +36,10 @@ void Beat::setState(enum BeatType state)
     _currentCycles[2] = _cyclemap[index][2];
     _currentCycles[3] = _cyclemap[index][3];
 
-    _currentCount = 0;
-    _beatState = ON;
+    _currentCount = 3;
+    _beatState = OFF;
     setTimer();
-    on();
+    off();
   }
 
 }
