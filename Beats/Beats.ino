@@ -1,6 +1,3 @@
-//static const int BEATING_DELAYS[] = {10, 150, 10, 1500};
-//static const int PANIC_DELAYS[] = {10, 10, 10, 10};
-int DEFAULT_DELAYS[6] = {10, 10,10, 10,10, 10};
 
 int _beatPin = 9;
 
@@ -10,7 +7,7 @@ unsigned int _currentCount = 0;
 
 const int NUMB_CYCLES =  4;
 
-int _currentCycles[4];
+int _currentCycles[NUMB_CYCLES];
 
 
 
