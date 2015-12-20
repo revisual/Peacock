@@ -4,7 +4,7 @@
 
 #include <SoftwareSerial.h>
 
-static const int BEAT_PIN = 9;
+static const int BEAT_PIN = 5;
 
 static const double TARGET_LAT = 50.842537 , TARGET_LON = -0.137835;
 static const int TARGET_RANGE_TIGHT = 5; // margin of error for within tight range of target
@@ -14,7 +14,7 @@ static const int TARGET_DISTANCE = 5; // margin of error for within loose range 
 SoftwareSerial ss_gps1 = SoftwareSerial(6, 7);
 GPSService gps(&ss_gps1);
 
-SoftwareSerial ss_cmps11 = SoftwareSerial(8, 9);
+SoftwareSerial ss_cmps11 = SoftwareSerial(9,8);
 CMPS11Service cmps11(&ss_cmps11);
 
 Beat beat(BEAT_PIN);
@@ -50,14 +50,14 @@ void loop()
 {
   gps.advance();
   beat.advance();
-  //setBearing(cmps11.getHeading());
-  Serial.println("age of fix = " + (String)gps.getAgeOfFix());
-  Serial.println("heading = " + (String)cmps11.getHeading());
+  setBearing(cmps11.getHeading());
+  //Serial.println("age of fix = " + (String)gps.getAgeOfFix());
+  //Serial.println("heading = " + (String)cmps11.getHeading());
 }
 
 void setBearing(unsigned int current_angle)
 {
-  if ( !gps.isValid()) return;
+  //if ( !gps.isValid()) return;
 
   if ( gps.isDistanceWithinTolerance( TARGET_DISTANCE ))
   {
