@@ -4,19 +4,19 @@
 
 #include <SoftwareSerial.h>
 
-static const int BEAT_PIN = 9;
+static const int BEAT_PIN = 5;
 
 static const double TARGET_LAT = 50.842537 , TARGET_LON = -0.137835;
 static const int TARGET_RANGE_TIGHT = 5; // margin of error for within tight range of target
-static const int TARGET_RANGE_LOOSE = 45; // margin of error for within loose range of target
+static const int TARGET_RANGE_LOOSE = 44; // margin of error for within loose range of target
 static const int TARGET_DISTANCE = 5; // margin of error for within loose range of target
 
 static const unsigned long FRESHNESS_TARGET = 10000; // data considered stale if _ageOfFix exceeds this
 
-SoftwareSerial ss_gps1 = SoftwareSerial(3, 4);
+SoftwareSerial ss_gps1 = SoftwareSerial(6, 7);
 GPSService gps(&ss_gps1);
 
-SoftwareSerial ss_cmps11 = SoftwareSerial(6, 5);
+SoftwareSerial ss_cmps11 = SoftwareSerial(9,8);
 CMPS11Service cmps11(&ss_cmps11);
 
 Beat beat(BEAT_PIN);
@@ -48,6 +48,7 @@ void setup()
 
 void loop()
 {
+  //Serial.println("loop = ");
   gps.advance();
   beat.advance();
   setBearing(cmps11.getHeading());
@@ -60,10 +61,10 @@ void trackFreshness()
 
   if ( !gps.isValid() )
   {
-    if( currentFreshness != INVALID)
+    if ( currentFreshness != INVALID)
     {
-       currentFreshness = INVALID;
-    }   
+      currentFreshness = INVALID;
+    }
     return;
   }
 
@@ -82,13 +83,15 @@ void trackFreshness()
 
 void setBearing(unsigned int current_angle)
 {
-  if ( !gps.isValid()) return;
+  //Serial.println("angle = " + (String)current_angle);
+  //if ( !gps.isValid()) return;
 
   if ( gps.isDistanceWithinTolerance( TARGET_DISTANCE ))
   {
     if ( currentBeat != CONSTANT )
     {
       currentBeat = CONSTANT;
+       Serial.println("CONSTANT");
     }
   }
 
@@ -100,6 +103,7 @@ void setBearing(unsigned int current_angle)
       currentBeat = RAPID;
       beat.stop();
       beat.start(15, 150, 15, 500);
+      Serial.println("RAPID");
     }
 
   }
@@ -110,6 +114,7 @@ void setBearing(unsigned int current_angle)
       currentBeat = STEADY;
       beat.stop();
       beat.start(20, 200, 20, 1500);
+      Serial.println("STEADY");
     }
   }
 
@@ -117,6 +122,7 @@ void setBearing(unsigned int current_angle)
   {
     currentBeat = NONE;
     beat.stop();
+    Serial.println("NONE");
   }
 }
 
