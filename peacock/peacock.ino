@@ -6,7 +6,7 @@
 
 static const int BEAT_PIN = 5;
 
-static const double TARGET_LAT = 50.842537 , TARGET_LON = -0.137835;
+static const double TARGET_LAT = 51.058775 , TARGET_LON = -3.126273;
 static const int TARGET_RANGE_TIGHT = 5; // margin of error for within tight range of target
 static const int TARGET_RANGE_LOOSE = 45; // margin of error for within loose range of target
 static const int TARGET_DISTANCE = 5; // margin of error for within loose range of target
@@ -43,7 +43,7 @@ void setup()
   cmps11.begin(9600);
 
   beat.configureState(beat.STEADY_HEART, 20, 200, 20, 1500);
-  beat.configureState(beat.RAPID_HEART, 15, 150, 15, 500);
+  beat.configureState(beat.RAPID_HEART, 18, 188, 18, 444);
 }
 
 void loop()

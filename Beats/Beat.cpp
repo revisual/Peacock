@@ -18,28 +18,29 @@ void Beat::configureState(enum BeatType state, int one, int two, int three, int 
 
 void Beat::setState(enum BeatType state)
 {
-  int index = (int)state;
-
+  Serial.println("setState = " + (String)state);
   if (_currentBeat == state ) return;
 
-  if ( state == NONE || index > MAX_STATES - 1 || index < 0 || _cyclemap[index] == NULL)
+  int index = (int)state;
+
+  if ( state == NONE ||  index > MAX_STATES - 1 || index < 0 || _cyclemap[index] == NULL)
   {
     stop();
   }
-  
+
   else
   {
+    bool isStart = ( _beatState == INACTIVE || _currentBeat == NONE);
+
     _currentBeat = state;
 
-    _currentCycles[0] = _cyclemap[index][0];
-    _currentCycles[1] = _cyclemap[index][1];
-    _currentCycles[2] = _cyclemap[index][2];
-    _currentCycles[3] = _cyclemap[index][3];
+    if ( isStart)
+    {
+      _beatState = ON;
+      setTimer();
+      on();
+    }
 
-    _currentCount = 3;
-    _beatState = OFF;
-    setTimer();
-    off();
   }
 
 }
@@ -47,6 +48,7 @@ void Beat::setState(enum BeatType state)
 void Beat::stop()
 {
   _beatState = INACTIVE;
+  _currentBeat = NONE;
   _currentCount = 0;
   off();
 }
@@ -83,7 +85,7 @@ void Beat::off()
 void Beat::setTimer()
 {
   _timerStart = millis();
-  _currentDelay = _currentCycles[_currentCount];
+  _currentDelay = _cyclemap[(int)_currentBeat][_currentCount];
 
   _currentCount++;
   if ( _currentCount >= NUMB_CYCLES)

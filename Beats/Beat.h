@@ -24,9 +24,6 @@ class Beat
     void advance();
     void on();
     void off();
-    
-    
-
 
 
   private:
@@ -36,7 +33,6 @@ class Beat
     unsigned long _timerStart = 0;
     unsigned long _currentDelay = 0;
     unsigned int _currentCount = 0;
-    int _currentCycles[NUMB_CYCLES];
     int _cyclemap[MAX_STATES][NUMB_CYCLES];
     enum state {
       INACTIVE,
