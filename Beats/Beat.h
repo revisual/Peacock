@@ -25,7 +25,6 @@ class Beat
     void on();
     void off();
 
-
   private:
     static const int NUMB_CYCLES =  6;
     static const int MAX_STATES =  4;

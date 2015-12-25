@@ -18,7 +18,6 @@ void Beat::configureState(enum BeatType state, int one, int two, int three, int 
 
 void Beat::setState(enum BeatType state)
 {
-  Serial.println("setState = " + (String)state);
   if (_currentBeat == state ) return;
 
   int index = (int)state;
