@@ -13,8 +13,12 @@ class WayPoint
   public:
     WayPoint();
     bool add( WayPointData waypoint);
-    WayPointData next();
-    WayPointData current();
+    void reset( );
+    void next();
+    double currentLat();
+    double currentLon();
+    String currentAction();
+    String currentName();
     bool hasArrived(unsigned int dist);
     bool isComplete();
 

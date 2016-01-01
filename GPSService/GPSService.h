@@ -30,21 +30,19 @@ class GPSService
   private:
     SoftwareSerial * _gps;
     TinyGPS _tinyGPS;
-    
-    enum GPS_STATE {
-      RESET,
-      WRITING,
-      READING,
-      RESTING
-    };
-    GPS_STATE _gpsState = RESET;
 
-    enum FreshnessType {
-      INVALID,
-      FRESH,
-      STALE
-    };
-    FreshnessType currentFreshness = INVALID;
+    static const byte RESET = 0;
+    static const byte WRITING = 1;
+    static const byte READING = 2;
+    static const byte RESTING = 3;
+
+    static const byte INVALID = 4;
+    static const byte FRESH = 5;
+    static const byte STALE = 6;    
+    
+    byte _gpsState = RESET;
+   
+    byte currentFreshness = INVALID;
 
     unsigned long _timerStart = 0;
     unsigned long _readCycleFresh = 111;

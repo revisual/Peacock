@@ -9,37 +9,28 @@
 class Beat
 {
   public:
-    Beat(int pin);
+    Beat(byte pin);
 
-    enum BeatType {
-      NONE,
-      SLOW_HEART,
-      STEADY_HEART,
-      RAPID_HEART
-    };
-    
-    void configureState( enum BeatType state, int one, int two, int three, int four);
-    void setState(enum BeatType state);
+    void configureState( byte state, int one, int two, int three, int four);
+    void setState(byte state);
     void stop();
     void advance();
     void on();
     void off();
 
   private:
-    static const int NUMB_CYCLES =  6;
-    static const int MAX_STATES =  4;
-    int _beatPin = 9;
+    static const byte NUMB_CYCLES =  4;
+    static const byte MAX_STATES =  6;
+    static const byte INACTIVE =  0;
+    static const byte OFF =  1;
+    static const byte ON =  2;
+    byte _beatPin = 9;
     unsigned long _timerStart = 0;
     unsigned long _currentDelay = 0;
-    unsigned int _currentCount = 0;
+    byte _currentCount = 0;
     int _cyclemap[MAX_STATES][NUMB_CYCLES];
-    enum state {
-      INACTIVE,
-      OFF,
-      ON
-    };
-    state _beatState = INACTIVE;
-    BeatType _currentBeat = NONE;
+    byte _beatState = INACTIVE;
+    byte _currentBeat = 0;
     void setTimer();
 };
 

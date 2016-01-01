@@ -1,9 +1,4 @@
-/*
-
-*/
-
 #include "WayPoint.h"
-#include "Arduino.h"
 
 WayPoint::WayPoint() {}
 
@@ -22,17 +17,36 @@ bool WayPoint::hasArrived(unsigned int dist)
 
 bool WayPoint::isComplete()
 {
-  return ( _currentItem >= (_numbItems-1));
+  return ( _currentItem >= (_numbItems));
 }
 
-WayPointData WayPoint::next()
+void WayPoint::next()
 {
   _currentItem++;
-  return _data[_currentItem];
 }
 
-WayPointData WayPoint::current()
+void WayPoint::reset()
 {
-  return _data[_currentItem];
+  _currentItem = 0;
+}
+
+double WayPoint::currentLat()
+{
+  return _data[_currentItem].getLat();
+}
+
+double WayPoint::currentLon()
+{
+  return _data[_currentItem].getLon();
+}
+
+String WayPoint::currentAction()
+{
+  return  _data[_currentItem].getAction();
+}
+
+String WayPoint::currentName()
+{
+  _data[_currentItem].getName();
 }
 

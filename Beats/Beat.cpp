@@ -1,35 +1,32 @@
 #include "Arduino.h"
 #include "Beat.h"
 
-Beat::Beat(int pin)
+Beat::Beat(byte pin)
 {
   _beatPin = pin;
   pinMode(_beatPin, OUTPUT);
 }
 
-void Beat::configureState(enum BeatType state, int one, int two, int three, int four)
+void Beat::configureState(byte state, int one, int two, int three, int four)
 {
-  int index = (int)state;
-  _cyclemap[index][0] = one;
-  _cyclemap[index][1] = two;
-  _cyclemap[index][2] = three;
-  _cyclemap[index][3] = four;
+  _cyclemap[state][0] = one;
+  _cyclemap[state][1] = two;
+  _cyclemap[state][2] = three;
+  _cyclemap[state][3] = four;
 }
 
-void Beat::setState(enum BeatType state)
+void Beat::setState(byte state)
 {
   if (_currentBeat == state ) return;
 
-  int index = (int)state;
-
-  if ( state == NONE ||  index > MAX_STATES - 1 || index < 0 || _cyclemap[index] == NULL)
+  if ( state == INACTIVE ||  state > MAX_STATES - 1 ||  _cyclemap[state] == NULL)
   {
     stop();
   }
 
   else
   {
-    bool isStart = ( _beatState == INACTIVE || _currentBeat == NONE);
+    bool isStart = ( _beatState == INACTIVE || _currentBeat == INACTIVE);
 
     _currentBeat = state;
 
@@ -47,7 +44,7 @@ void Beat::setState(enum BeatType state)
 void Beat::stop()
 {
   _beatState = INACTIVE;
-  _currentBeat = NONE;
+  _currentBeat = INACTIVE;
   _currentCount = 0;
   off();
 }
