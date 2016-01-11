@@ -2,9 +2,17 @@
 #include <GPSService.h>
 #include <WayPoint.h>
 #include <Beat.h>
+#include <FSM.h>
 #include <SimpleTimer.h>
+#include <SerialIn.h>
 
 #include <SoftwareSerial.h>
+
+/*
+   example data:
+   |A,50.846357,-0.133361,5,@a.wav|B,50.846426,-0.132604,5,@b.wav|C,50.847461,-0.132846,5,@c.wav|D,50.845832,-0.13328,5,@d.wav|$
+    |A,50.846356940159865,-0.13340473215066595,5,@a.wav|B,50.8464416175486,-0.13261079828225775,5,@b.wav|C,50.84742725285132,-0.1328843832743587,5,@c.wav|D,50.84585225875958,-0.13329207937204046,5,@d.wav|$
+*/
 
 static const byte BEAT_PIN = 5;
 
@@ -21,15 +29,13 @@ static const byte ACTION_LOG = 1;
 static const byte ACTION_PLAY = 2;
 static const byte ACTION_DESERIALISE = 3;
 
-static const byte STARTING_UP = 0;
-static const byte READING = 1;
-static const byte CHECKING_SYSTEM = 2;
-static const byte SYSTEM_READY = 3;
-static const byte NAVIGATING_TO_WAYPOINT = 4;
-static const byte ARRIVING_AT_WAYPOINT = 5;
-static const byte RESTING_AT_WAYPOINT = 6;
-static const byte FINALISING = 7;
-static const byte COMPLETED = 8;
+static const byte REQUEST_DATA = 1;
+static const byte READING = 2;
+static const byte CHECKING_SYSTEM = 3;
+static const byte SYSTEM_READY = 4;
+static const byte NAVIGATING_TO_WAYPOINT = 5;
+static const byte ARRIVING_AT_WAYPOINT = 6;
+static const byte COMPLETED = 7;
 
 static const byte NONE = 0;
 static const byte STEADY_HEART = 1;
@@ -45,9 +51,10 @@ CMPS11Service cmps11(&ss_cmps11);
 WayPoint _waypoints;
 SimpleTimer _timer;
 Beat beat(BEAT_PIN);
+FSM _fsm;
+SerialIn _serialIn;
 
 byte readingState = ACTION_NONE;
-byte currentState = READING;
 String inputString = "";
 
 void setup()
@@ -64,6 +71,21 @@ void setup()
   beat.configureState(STEADY_HEART, 20, 200, 20, 1666);
   beat.configureState(RAPID_HEART, 18, 188, 18, 444);
   beat.configureState(CONSTANT_REGULAR_SLOW, 20, 1666, 20, 1666);
+
+  _fsm.setEnterStateCallbacks(REQUEST_DATA, enterRequestData);
+  _fsm.setEnterStateCallbacks(CHECKING_SYSTEM, enterCheckingSystem);
+  _fsm.setLoopStateCallbacks(SYSTEM_READY, loopSystemReady);
+  _fsm.setEnterStateCallbacks(NAVIGATING_TO_WAYPOINT, enterNavigatingToWayPoint);
+   _fsm.setLoopStateCallbacks(NAVIGATING_TO_WAYPOINT, loopNavigatingToWayPoint);
+  _fsm.setEnterStateCallbacks(ARRIVING_AT_WAYPOINT, enterArrivingAtWayPoint);
+  _fsm.setEnterStateCallbacks(COMPLETED, enterArrivingAtWayPoint);
+
+
+  _serialIn.setCallbacks('|', onSerialDataStart, onSerialDataEnd);
+
+
+  _fsm.changeState(REQUEST_DATA);
+
 }
 
 void loop()
@@ -71,142 +93,107 @@ void loop()
   gps.advance();
   beat.advance();
   _timer.run();
-  runState();
+  _fsm.run();
 }
 
-void runState()
+void enterRequestData()
 {
-  if ( currentState == READING )
-  {
-    //nothing - waiting for serial data;
-  }
-
-  else if ( currentState == CHECKING_SYSTEM )
-  {
-    beat.setState(CONSTANT_REGULAR_SLOW);
-    currentState = SYSTEM_READY;
-  }
-
-  else if ( currentState == SYSTEM_READY)
-  {
-    if (  gps.isValid())
-    {
-      changeToNavigating();
-    }
-    //nothing - waiting for changeToNavigating timeout;
-  }
-
-  else if ( currentState == NAVIGATING_TO_WAYPOINT )
-  {
-    setBearing(cmps11.getHeading());
-    checkDistance();
-  }
-
-  else if ( currentState == ARRIVING_AT_WAYPOINT)
-  {
-    _waypoints.next();
-    applyWayPoint();
-    beat.setState(CONSTANT_REGULAR_SLOW);
-    currentState = RESTING_AT_WAYPOINT;
-    _timer.setTimeout(5000, changeToNavigating);
-  }
-
-  else if ( currentState == RESTING_AT_WAYPOINT)
-  {
-    // nothing - waiting for changeToNavigating timeout;
-  }
-
-  else if (currentState == FINALISING)
-  {
-    beat.setState(CONSTANT_REGULAR_SLOW);
-    currentState = COMPLETED;
-  }
+  Serial.print(F("#data$"));
+  _timer.setTimeout(500, checkDataReceived);
 }
 
-void serialEvent() 
+void checkDataReceived()
 {
-  if (readingState == ACTION_NONE)
-  {
-    findNextSpecial();
-  }
-
-  else  if (readingState == ACTION_DESERIALISE)
-  {
-    readData();
-  }
+ // Serial.print(F("checkDataReceived"));
+  if ( _fsm.getCurrentState() != REQUEST_DATA) return;
+  enterRequestData();
 }
 
-void findNextSpecial()
+void enterCheckingSystem()
 {
-  while (Serial.available()) {
-
-    char inChar = (char)Serial.read();
-
-    if (inChar == PIPE_CHAR)
-    {
-      readData();
-    }
-  }
+  Serial.print(F("@test.wav$"));
+  beat.setState(CONSTANT_REGULAR_SLOW);
+  _fsm.changeState(SYSTEM_READY);
+  Serial.print(_fsm.getCurrentState());
 }
 
-void readData()
+void loopSystemReady()
 {
-  if ( currentState != READING ) return;
-  
-  readingState == ACTION_DESERIALISE;
-  
-  while (Serial.available()) {
+  Serial.print(F("READY"));
+  if (  !gps.isValid())return; 
+  _fsm.changeState(NAVIGATING_TO_WAYPOINT);
+}
 
-    char inChar = (char)Serial.read();
+void enterNavigatingToWayPoint()
+{
+   Serial.print(F("naving"));
+    beat.setState(NONE);
+  setBearing(cmps11.getHeading());
+  checkDistance();
+}
 
-    if (inChar == PIPE_CHAR)
-    {
-      Serial.println(inputString );
-      WayPointData data(inputString, ',');
-      _waypoints.add( data );
-      inputString = "";
-    }
+void loopNavigatingToWayPoint()
+{
+  setBearing(cmps11.getHeading());
+  checkDistance();
+}
 
-    else if (inChar == END_CHAR)
-    {
-      applyWayPoint(  );
-      currentState = CHECKING_SYSTEM;
-      _waypoints.reset();
-      readingState = ACTION_NONE;
-      inputString = "";
-      break;
-    }
+void enterArrivingAtWayPoint()
+{
+  _waypoints.next();
+  applyWayPoint();
+  beat.setState(CONSTANT_REGULAR_SLOW);
+  _timer.setTimeout(5000, changeToNavigating);
+}
 
-    else
-    {
-      inputString += inChar;
-    }
-  }
+void enterCompleted()
+{
+  beat.setState(CONSTANT_REGULAR_SLOW);
 }
 
 void changeToNavigating()
 {
-  currentState = NAVIGATING_TO_WAYPOINT;
-  beat.setState(NONE);
+  _fsm.changeState(NAVIGATING_TO_WAYPOINT);
+}
+
+void serialEvent()
+{
+  _serialIn.run();
+}
+
+void onSerialDataStart( String input)
+{
+  //Serial.println("DATA START :: " + input);
+  WayPointData data(inputString, ',');
+  _fsm.changeState(READING);
+  _waypoints.add( data );
+}
+
+void onSerialDataEnd( String input)
+{
+  //Serial.println("DATA END :: " + input);
+  applyWayPoint(  );
+  _fsm.changeState(CHECKING_SYSTEM);
+  _waypoints.reset();
 }
 
 void checkDistance()
 {
   if ( _waypoints.isComplete() )
   {
-    currentState = FINALISING;
+    _fsm.changeState(COMPLETED);
   }
 
   else if ( _waypoints.hasArrived(gps.getCurrentDistance()))
   {
-    currentState = ARRIVING_AT_WAYPOINT;
+    _fsm.changeState(ARRIVING_AT_WAYPOINT);
   }
 }
 
 void applyWayPoint(  )
 {
   gps.setTargetCoords(_waypoints.currentLat(), _waypoints.currentLon() );
-  Serial.print(PLAY_CHAR + _waypoints.currentAction() + END_CHAR);
+  Serial.print( _waypoints.currentAction() + END_CHAR);
 }
 
 void setBearing(unsigned int current_angle)
