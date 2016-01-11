@@ -4,7 +4,7 @@
 #ifndef WayPoint_h
 #define WayPoint_h
 
-#define MAX_ITEMS 20
+#define MAX_ITEMS 10
 
 #include "WayPointData.h"
 
