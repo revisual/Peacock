@@ -54,9 +54,6 @@ Beat beat(BEAT_PIN);
 FSM _fsm;
 SerialIn _serialIn;
 
-byte readingState = ACTION_NONE;
-String inputString = "";
-
 void setup()
 {
   Serial.begin(9600);
@@ -73,18 +70,18 @@ void setup()
   beat.configureState(CONSTANT_REGULAR_SLOW, 20, 1666, 20, 1666);
 
   _fsm.setEnterStateCallbacks(REQUEST_DATA, enterRequestData);
+  _fsm.setEnterStateCallbacks(READING, enterReading);
   _fsm.setEnterStateCallbacks(CHECKING_SYSTEM, enterCheckingSystem);
   _fsm.setLoopStateCallbacks(SYSTEM_READY, loopSystemReady);
   _fsm.setEnterStateCallbacks(NAVIGATING_TO_WAYPOINT, enterNavigatingToWayPoint);
-   _fsm.setLoopStateCallbacks(NAVIGATING_TO_WAYPOINT, loopNavigatingToWayPoint);
+  _fsm.setLoopStateCallbacks(NAVIGATING_TO_WAYPOINT, loopNavigatingToWayPoint);
   _fsm.setEnterStateCallbacks(ARRIVING_AT_WAYPOINT, enterArrivingAtWayPoint);
   _fsm.setEnterStateCallbacks(COMPLETED, enterArrivingAtWayPoint);
-
-
-  _serialIn.setCallbacks('|', onSerialDataStart, onSerialDataEnd);
-
-
   _fsm.changeState(REQUEST_DATA);
+
+  _serialIn.setCallbacks(PIPE_CHAR, onSerialDataStart, onSerialDataEnd);
+
+  
 
 }
 
@@ -98,36 +95,40 @@ void loop()
 
 void enterRequestData()
 {
+  if ( _fsm.getCurrentState() != REQUEST_DATA) return;
   Serial.print(F("#data$"));
   _timer.setTimeout(500, checkDataReceived);
 }
 
 void checkDataReceived()
 {
- // Serial.print(F("checkDataReceived"));
   if ( _fsm.getCurrentState() != REQUEST_DATA) return;
   enterRequestData();
 }
 
+void enterReading()
+{
+
+}
+
 void enterCheckingSystem()
 {
-  Serial.print(F("@test.wav$"));
+  Serial.println(F("@test.wav$"));
   beat.setState(CONSTANT_REGULAR_SLOW);
   _fsm.changeState(SYSTEM_READY);
-  Serial.print(_fsm.getCurrentState());
 }
 
 void loopSystemReady()
 {
   Serial.print(F("READY"));
-  if (  !gps.isValid())return; 
+  if (  !gps.isValid())return;
   _fsm.changeState(NAVIGATING_TO_WAYPOINT);
 }
 
 void enterNavigatingToWayPoint()
 {
-   Serial.print(F("naving"));
-    beat.setState(NONE);
+  Serial.print(F("NAV"));
+  beat.setState(NONE);
   setBearing(cmps11.getHeading());
   checkDistance();
 }
@@ -163,18 +164,30 @@ void serialEvent()
 
 void onSerialDataStart( String input)
 {
-  //Serial.println("DATA START :: " + input);
-  WayPointData data(inputString, ',');
-  _fsm.changeState(READING);
-  _waypoints.add( data );
+
+  WayPointData data(input, ',');
+
+  if (_waypoints.add( data ))
+  {
+    Serial.println("DATA START :: " + input);
+    _fsm.changeState(READING);
+  }
+
+  else
+  {
+    Serial.println(F("ERROR ADDING DATA"));
+  }
+
 }
 
 void onSerialDataEnd( String input)
 {
-  //Serial.println("DATA END :: " + input);
-  applyWayPoint(  );
-  _fsm.changeState(CHECKING_SYSTEM);
+  Serial.println("DATA END :: " + input);
+
   _waypoints.reset();
+  applyWayPoint(  );
+
+  _fsm.changeState(CHECKING_SYSTEM);
 }
 
 void checkDistance()
@@ -193,7 +206,9 @@ void checkDistance()
 void applyWayPoint(  )
 {
   gps.setTargetCoords(_waypoints.currentLat(), _waypoints.currentLon() );
-  Serial.print( _waypoints.currentAction() + END_CHAR);
+  //Serial.println( "Action: " + (String)_waypoints.currentAction() + END_CHAR);
+  //Serial.println( "Lat: " + (String)_waypoints.currentLat());
+  //Serial.println( "Lon: " + (String)_waypoints.currentLon());
 }
 
 void setBearing(unsigned int current_angle)
