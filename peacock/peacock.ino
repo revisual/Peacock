@@ -42,15 +42,15 @@ static const byte STEADY_HEART = 1;
 static const byte RAPID_HEART = 2;
 static const byte CONSTANT_REGULAR_SLOW = 3;
 
-SoftwareSerial ss_gps1 = SoftwareSerial(6, 7);
-GPSService gps(&ss_gps1);
+SoftwareSerial ss_gps = SoftwareSerial(6, 7);
+GPSService _gps(&ss_gps);
 
 SoftwareSerial ss_cmps11 = SoftwareSerial(9, 8);
-CMPS11Service cmps11(&ss_cmps11);
+CMPS11Service _cmps(&ss_cmps11);
 
 WayPoint _waypoints;
 SimpleTimer _timer;
-Beat beat(BEAT_PIN);
+Beat _beat(BEAT_PIN);
 FSM _fsm;
 SerialIn _serialIn;
 
@@ -58,16 +58,16 @@ void setup()
 {
   Serial.begin(9600);
 
-  gps.begin(9600);
-  gps.setFreshnessTolerance(10000);
-  gps.setFreshReadingCycle(111, 1000);
-  gps.setStaleReadingCycle(333, 1000);
+  _gps.begin(9600);
+  _gps.setFreshnessTolerance(10000);
+  _gps.setFreshReadingCycle(111, 1000);
+  _gps.setStaleReadingCycle(333, 1000);
 
-  cmps11.begin(9600);
+  _cmps.begin(9600);
 
-  beat.configureState(STEADY_HEART, 20, 200, 20, 1666);
-  beat.configureState(RAPID_HEART, 18, 188, 18, 444);
-  beat.configureState(CONSTANT_REGULAR_SLOW, 20, 1666, 20, 1666);
+  _beat.configureState(STEADY_HEART, 20, 200, 20, 1666);
+  _beat.configureState(RAPID_HEART, 18, 188, 18, 444);
+  _beat.configureState(CONSTANT_REGULAR_SLOW, 20, 1666, 20, 1666);
 
   _fsm.setEnterStateCallbacks(REQUEST_DATA, enterRequestData);
   _fsm.setEnterStateCallbacks(READING, enterReading);
@@ -87,8 +87,8 @@ void setup()
 
 void loop()
 {
-  gps.advance();
-  beat.advance();
+  _gps.advance();
+  _beat.advance();
   _timer.run();
   _fsm.run();
 }
@@ -114,28 +114,28 @@ void enterReading()
 void enterCheckingSystem()
 {
   Serial.println(F("@test.wav$"));
-  beat.setState(CONSTANT_REGULAR_SLOW);
+  _beat.setState(CONSTANT_REGULAR_SLOW);
   _fsm.changeState(SYSTEM_READY);
 }
 
 void loopSystemReady()
 {
   Serial.print(F("READY"));
-  if (  !gps.isValid())return;
+  if (  !_gps.isValid())return;
   _fsm.changeState(NAVIGATING_TO_WAYPOINT);
 }
 
 void enterNavigatingToWayPoint()
 {
   Serial.print(F("NAV"));
-  beat.setState(NONE);
-  setBearing(cmps11.getHeading());
+  _beat.setState(NONE);
+  setBearing(_cmps.getHeading());
   checkDistance();
 }
 
 void loopNavigatingToWayPoint()
 {
-  setBearing(cmps11.getHeading());
+  setBearing(_cmps.getHeading());
   checkDistance();
 }
 
@@ -143,13 +143,13 @@ void enterArrivingAtWayPoint()
 {
   _waypoints.next();
   applyWayPoint();
-  beat.setState(CONSTANT_REGULAR_SLOW);
+  _beat.setState(CONSTANT_REGULAR_SLOW);
   _timer.setTimeout(5000, changeToNavigating);
 }
 
 void enterCompleted()
 {
-  beat.setState(CONSTANT_REGULAR_SLOW);
+  _beat.setState(CONSTANT_REGULAR_SLOW);
 }
 
 void changeToNavigating()
@@ -197,7 +197,7 @@ void checkDistance()
     _fsm.changeState(COMPLETED);
   }
 
-  else if ( _waypoints.hasArrived(gps.getCurrentDistance()))
+  else if ( _waypoints.hasArrived(_gps.getCurrentDistance()))
   {
     _fsm.changeState(ARRIVING_AT_WAYPOINT);
   }
@@ -205,7 +205,7 @@ void checkDistance()
 
 void applyWayPoint(  )
 {
-  gps.setTargetCoords(_waypoints.currentLat(), _waypoints.currentLon() );
+  _gps.setTargetCoords(_waypoints.currentLat(), _waypoints.currentLon() );
   //Serial.println( "Action: " + (String)_waypoints.currentAction() + END_CHAR);
   //Serial.println( "Lat: " + (String)_waypoints.currentLat());
   //Serial.println( "Lon: " + (String)_waypoints.currentLon());
@@ -214,18 +214,18 @@ void applyWayPoint(  )
 void setBearing(unsigned int current_angle)
 {
 
-  if ( gps.isBearingWithinTolerance( current_angle, TARGET_RANGE_TIGHT ))
+  if ( _gps.isBearingWithinTolerance( current_angle, TARGET_RANGE_TIGHT ))
   {
-    beat.setState(RAPID_HEART);
+    _beat.setState(RAPID_HEART);
   }
 
-  else if ( gps.isBearingWithinTolerance( current_angle, TARGET_RANGE_LOOSE ))
+  else if ( _gps.isBearingWithinTolerance( current_angle, TARGET_RANGE_LOOSE ))
   {
-    beat.setState(STEADY_HEART);
+    _beat.setState(STEADY_HEART);
   }
 
   else
   {
-    beat.setState(NONE);
+    _beat.setState(NONE);
   }
 }
