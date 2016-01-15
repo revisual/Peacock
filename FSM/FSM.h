@@ -3,8 +3,9 @@
 #ifndef FSM_H
 #define FSM_H
 
-typedef void (*enter_callback)(void);
-typedef void (*loop_callback)(void);
+#include <Arduino.h>
+
+typedef void (*fsm_callback)(void);
 
 class FSM {
 
@@ -18,8 +19,8 @@ class FSM {
 
     byte getCurrentState();
 
-    void setEnterStateCallbacks(byte state, enter_callback f);
-    void setLoopStateCallbacks(byte state, loop_callback f);
+    void setEnterStateCallbacks(byte state, fsm_callback f);
+    void setLoopStateCallbacks(byte state, fsm_callback f);
 
     void changeState(byte state);
 
@@ -27,8 +28,8 @@ class FSM {
 
     const static byte MAX_STATES = 10;
 
-    enter_callback _enterCallbacks[MAX_STATES];
-    loop_callback _loopCallbacks[MAX_STATES];
+    fsm_callback _enterCallbacks[MAX_STATES];
+    fsm_callback _loopCallbacks[MAX_STATES];
     byte _currentState = 0;
 
 };
