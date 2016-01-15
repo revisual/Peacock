@@ -6,14 +6,14 @@ FSM::FSM() {
   for (int i = 0; i < MAX_STATES; i++) {
 
     _enterCallbacks[i] = false;
-    _loopCallbacks[i] = false;
+    _runCallbacks[i] = false;
   }
 }
 
 void FSM::run() {
 
-  if (!_loopCallbacks[_currentState])return;
-  (*_loopCallbacks[_currentState])();
+  if (!_runCallbacks[_currentState])return;
+  (*_runCallbacks[_currentState])();
 }
 
 void FSM::changeState(byte state)
@@ -29,14 +29,14 @@ byte FSM::getCurrentState()
   return _currentState;
 }
 
-void FSM::setEnterStateCallbacks(byte state, fsm_callback f)
+void FSM::setEnterCallback(byte state, fsm_callback f)
 {
   _enterCallbacks[state] = f;
 }
 
-void FSM::setLoopStateCallbacks(byte state,  fsm_callback f)
+void FSM::setRunCallback(byte state,  fsm_callback f)
 {
-  _loopCallbacks[state] = f;
+  _runCallbacks[state] = f;
 }
 
 

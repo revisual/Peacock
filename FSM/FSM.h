@@ -19,8 +19,8 @@ class FSM {
 
     byte getCurrentState();
 
-    void setEnterStateCallbacks(byte state, fsm_callback f);
-    void setLoopStateCallbacks(byte state, fsm_callback f);
+    void setEnterCallback(byte state, fsm_callback f);
+    void setRunCallback(byte state, fsm_callback f);
 
     void changeState(byte state);
 
@@ -29,7 +29,7 @@ class FSM {
     const static byte MAX_STATES = 10;
 
     fsm_callback _enterCallbacks[MAX_STATES];
-    fsm_callback _loopCallbacks[MAX_STATES];
+    fsm_callback _runCallbacks[MAX_STATES];
     byte _currentState = 0;
 
 };

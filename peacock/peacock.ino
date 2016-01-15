@@ -69,19 +69,16 @@ void setup()
   _beat.configureState(RAPID_HEART, 18, 188, 18, 444);
   _beat.configureState(CONSTANT_REGULAR_SLOW, 20, 1666, 20, 1666);
 
-  _fsm.setEnterStateCallbacks(REQUEST_DATA, enterRequestData);
-  _fsm.setEnterStateCallbacks(READING, enterReading);
-  _fsm.setEnterStateCallbacks(CHECKING_SYSTEM, enterCheckingSystem);
-  _fsm.setLoopStateCallbacks(SYSTEM_READY, loopSystemReady);
-  _fsm.setEnterStateCallbacks(NAVIGATING_TO_WAYPOINT, enterNavigatingToWayPoint);
-  _fsm.setLoopStateCallbacks(NAVIGATING_TO_WAYPOINT, loopNavigatingToWayPoint);
-  _fsm.setEnterStateCallbacks(ARRIVING_AT_WAYPOINT, enterArrivingAtWayPoint);
-  _fsm.setEnterStateCallbacks(COMPLETED, enterArrivingAtWayPoint);
+  _fsm.setEnterCallback(REQUEST_DATA, enterRequestData);
+  _fsm.setEnterCallback(CHECKING_SYSTEM, enterCheckingSystem);
+  _fsm.setRunCallback(SYSTEM_READY, loopSystemReady);
+  _fsm.setEnterCallback(NAVIGATING_TO_WAYPOINT, enterNavigatingToWayPoint);
+  _fsm.setRunCallback(NAVIGATING_TO_WAYPOINT, loopNavigatingToWayPoint);
+  _fsm.setEnterCallback(ARRIVING_AT_WAYPOINT, enterArrivingAtWayPoint);
+  _fsm.setEnterCallback(COMPLETED, enterArrivingAtWayPoint);
   _fsm.changeState(REQUEST_DATA);
 
-  _serialIn.setCallbacks(PIPE_CHAR, onSerialDataStart, onSerialDataEnd);
-
-  
+  _serialIn.setCallbacks(PIPE_CHAR, onSerialDataStart, onSerialDataEnd);  
 
 }
 
@@ -106,11 +103,6 @@ void checkDataReceived()
   enterRequestData();
 }
 
-void enterReading()
-{
-
-}
-
 void enterCheckingSystem()
 {
   Serial.println(F("@test.wav$"));
@@ -120,17 +112,14 @@ void enterCheckingSystem()
 
 void loopSystemReady()
 {
-  Serial.print(F("READY"));
   if (  !_gps.isValid())return;
   _fsm.changeState(NAVIGATING_TO_WAYPOINT);
 }
 
 void enterNavigatingToWayPoint()
 {
-  Serial.print(F("NAV"));
+  Serial.println(F("NAV"));
   _beat.setState(NONE);
-  setBearing(_cmps.getHeading());
-  checkDistance();
 }
 
 void loopNavigatingToWayPoint()
@@ -169,7 +158,7 @@ void onSerialDataStart( String input)
 
   if (_waypoints.add( data ))
   {
-    Serial.println("DATA START :: " + input);
+    Serial.println("DATA:: " + input);
     _fsm.changeState(READING);
   }
 
@@ -182,11 +171,8 @@ void onSerialDataStart( String input)
 
 void onSerialDataEnd( String input)
 {
-  Serial.println("DATA END :: " + input);
-
   _waypoints.reset();
   applyWayPoint(  );
-
   _fsm.changeState(CHECKING_SYSTEM);
 }
 
