@@ -14,7 +14,7 @@ class Beat
     void configureState( byte state, int one, int two, int three, int four);
     void setState(byte state);
     void stop();
-    void advance();
+    void run();
     void on();
     void off();
 

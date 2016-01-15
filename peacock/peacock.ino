@@ -87,8 +87,8 @@ void setup()
 
 void loop()
 {
-  _gps.advance();
-  _beat.advance();
+  _gps.run();
+  _beat.run();
   _timer.run();
   _fsm.run();
 }

@@ -49,7 +49,7 @@ void Beat::stop()
   off();
 }
 
-void Beat::advance()
+void Beat::run()
 {
   if ( _beatState == INACTIVE ) return;
 

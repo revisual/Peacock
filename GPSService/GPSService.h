@@ -13,7 +13,7 @@ class GPSService
   public:
     GPSService(SoftwareSerial *ss);
     void begin(long speed);
-    void advance();
+    void run();
     void setFreshnessTolerance(unsigned long ms);
     void setFreshReadingCycle(unsigned long reading, unsigned long resting );
     void setStaleReadingCycle(unsigned long reading, unsigned long resting );

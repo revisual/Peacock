@@ -1,6 +1,3 @@
-/*
-
-*/
 
 #include "Arduino.h"
 #include "GPSService.h"
@@ -18,7 +15,7 @@ void GPSService::begin(long speed)
   _gps->begin(speed);
 }
 
-void GPSService::advance()
+void GPSService::run()
 {
   _gps->listen();
 
