@@ -76,7 +76,8 @@ void setup()
   _fsm.setRunCallback(NAVIGATING_TO_WAYPOINT, loopNavigatingToWayPoint);
   _fsm.setEnterCallback(ARRIVING_AT_WAYPOINT, enterArrivingAtWayPoint);
   _fsm.setEnterCallback(COMPLETED, enterArrivingAtWayPoint);
-  _fsm.changeState(REQUEST_DATA);
+  //_fsm.changeState(REQUEST_DATA);
+  _fsm.changeState(CHECKING_SYSTEM);
 
   _serialIn.setCallbacks(PIPE_CHAR, onSerialDataStart, onSerialDataEnd);  
 
@@ -130,6 +131,8 @@ void loopNavigatingToWayPoint()
 
 void enterArrivingAtWayPoint()
 {
+  Serial.println(F("ARRIVE"));
+  Serial.println( _waypoints.currentAction() + END_CHAR);
   _waypoints.next();
   applyWayPoint();
   _beat.setState(CONSTANT_REGULAR_SLOW);
@@ -192,7 +195,6 @@ void checkDistance()
 void applyWayPoint(  )
 {
   _gps.setTargetCoords(_waypoints.currentLat(), _waypoints.currentLon() );
-  //Serial.println( "Action: " + (String)_waypoints.currentAction() + END_CHAR);
   //Serial.println( "Lat: " + (String)_waypoints.currentLat());
   //Serial.println( "Lon: " + (String)_waypoints.currentLon());
 }

@@ -19,6 +19,8 @@ class GPSService
     void setStaleReadingCycle(unsigned long reading, unsigned long resting );
     void setTargetCoords(double lat, double lon);
     int getCurrentBearing();
+    double getCurrentLat();
+    double getCurrentLong();
     unsigned int  getCurrentDistance();
     unsigned long  getAgeOfFix();
     bool isDistanceWithinTolerance( unsigned int tolerance );

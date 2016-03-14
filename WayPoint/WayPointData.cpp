@@ -1,6 +1,3 @@
-/*
-
-*/
 
 #include "WayPointData.h"
 #include "Arduino.h"

@@ -80,6 +80,15 @@ int GPSService::getCurrentBearing()
   return _currentBearing;
 }
 
+double GPSService::getCurrentLat()
+{
+  return _currentLat;
+}
+double GPSService::getCurrentLong()
+{
+  return _currentLon;
+}
+
 unsigned int  GPSService::getCurrentDistance()
 {
   return _currentDistance;

@@ -150,7 +150,8 @@ void onSerialCommandEnd( String input)
 {
   if (input == F("data"))
   {
-    Serial.println("COMMAND END :: " + input);
+    //Serial.println("COMMAND END :: " + input);
+    Serial.print(F("|A,50.846357,-0.133361,5,@a.wav|B,50.846426,-0.132604,5,@b.wav|C,50.847461,-0.132846,5,@c.wav|D,50.845832,-0.13328,5,@d.wav|$"));
     // send back data here
   }
 }
@@ -158,6 +159,7 @@ void onSerialCommandEnd( String input)
 void onSerialPlayStart( String input)
 {
   // Serial.println("PLAY START :: " + input);
+ // playFile(input);
 }
 
 void onSerialPlayEnd( String input)
