@@ -14,7 +14,9 @@
     |A,50.846356940159865,-0.13340473215066595,5,@a.wav|B,50.8464416175486,-0.13261079828225775,5,@b.wav|C,50.84742725285132,-0.1328843832743587,5,@c.wav|D,50.84585225875958,-0.13329207937204046,5,@d.wav|$
 */
 
-static const byte BEAT_PIN = 5;
+static const byte BEAT_PIN = 9;
+static const byte RED_PIN = 8;
+static const byte GREEN_PIN = 7;
 
 static const int TARGET_RANGE_TIGHT = 5; // mar0gin of error for within tight range of target
 static const int TARGET_RANGE_LOOSE = 45; // margin of error for within loose range of target
@@ -42,7 +44,7 @@ static const byte STEADY_HEART = 1;
 static const byte RAPID_HEART = 2;
 static const byte CONSTANT_REGULAR_SLOW = 3;
 
-SoftwareSerial ss_gps = SoftwareSerial(6, 7);
+SoftwareSerial ss_gps = SoftwareSerial(4,3);
 GPSService _gps(&ss_gps);
 
 SoftwareSerial ss_cmps11 = SoftwareSerial(9, 8);
@@ -76,10 +78,38 @@ void setup()
   _fsm.setRunCallback(NAVIGATING_TO_WAYPOINT, loopNavigatingToWayPoint);
   _fsm.setEnterCallback(ARRIVING_AT_WAYPOINT, enterArrivingAtWayPoint);
   _fsm.setEnterCallback(COMPLETED, enterArrivingAtWayPoint);
-  //_fsm.changeState(REQUEST_DATA);
-  _fsm.changeState(CHECKING_SYSTEM);
+  _fsm.changeState(REQUEST_DATA);
+  // _fsm.changeState(CHECKING_SYSTEM);
 
-  _serialIn.setCallbacks(PIPE_CHAR, onSerialDataStart, onSerialDataEnd);  
+  _serialIn.setCallbacks(PIPE_CHAR, onSerialDataStart, onSerialDataEnd);
+
+  _timer.setInterval(10000, logPosition);
+
+}
+
+void logPosition()
+{
+  if ( !_gps.isValid())
+  {
+    log(F("----------------"));
+    log(F("NOT VALID:"));
+
+  }
+  else
+  {
+    log(F("----------------"));
+    log(F("LAT:"));
+    log((String)_gps.getCurrentLat());
+    log(F("LONG:"));
+    log((String)_gps.getCurrentLong());
+    log(F("BEARING:"));
+    log((String)_gps.getCurrentBearing());
+    log(F("DISTANCE:"));
+    log((String)_gps.getCurrentDistance());
+    log(F("AGE:"));
+    log((String)_gps.getAgeOfFix());
+  }
+
 
 }
 
@@ -89,12 +119,16 @@ void loop()
   _beat.run();
   _timer.run();
   _fsm.run();
+
+  digitalWrite(GREEN_PIN, (_gps.isValid()) ? HIGH : LOW);
+  digitalWrite(RED_PIN, (_gps.isValid() || _gps.isFresherThan(10000)) ? LOW : HIGH);
+
 }
 
 void enterRequestData()
 {
   if ( _fsm.getCurrentState() != REQUEST_DATA) return;
-  Serial.print(F("#data$"));
+  Serial.print(F("#data.txt$"));
   _timer.setTimeout(500, checkDataReceived);
 }
 
@@ -106,20 +140,22 @@ void checkDataReceived()
 
 void enterCheckingSystem()
 {
-  Serial.println(F("@test.wav$"));
+  digitalWrite(RED_PIN, HIGH );
+  Serial.println(F("@startup.wav$"));
   _beat.setState(CONSTANT_REGULAR_SLOW);
   _fsm.changeState(SYSTEM_READY);
 }
 
 void loopSystemReady()
 {
-  if (  !_gps.isValid())return;
+  if (!_gps.isValid())return;
+  Serial.println(F("@valid.wav$"));
   _fsm.changeState(NAVIGATING_TO_WAYPOINT);
 }
 
 void enterNavigatingToWayPoint()
 {
-  Serial.println(F("NAV"));
+  log(F("M:s5"));
   _beat.setState(NONE);
 }
 
@@ -131,7 +167,7 @@ void loopNavigatingToWayPoint()
 
 void enterArrivingAtWayPoint()
 {
-  Serial.println(F("ARRIVE"));
+  log(F("M:s6"));
   Serial.println( _waypoints.currentAction() + END_CHAR);
   _waypoints.next();
   applyWayPoint();
@@ -161,14 +197,14 @@ void onSerialDataStart( String input)
 
   if (_waypoints.add( data ))
   {
-    Serial.println("DATA:: " + input);
+    //Serial.println("DATA:: " + input);
     _fsm.changeState(READING);
   }
 
-  else
-  {
+  /*else
+    {
     Serial.println(F("ERROR ADDING DATA"));
-  }
+    }*/
 
 }
 
@@ -217,3 +253,9 @@ void setBearing(unsigned int current_angle)
     _beat.setState(NONE);
   }
 }
+
+void log( String msg)
+{
+  Serial.print(LOG_CHAR + msg + END_CHAR);
+}
+
